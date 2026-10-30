@@ -1,12 +1,5 @@
 # SmartItin: Multi-Agent A2A Travel Planner
 
-## Credits
-
-SmartItin replicates the concept and architecture of **travAI** by
-Carlos Alberto Lembono
-([LinkedIn](https://www.linkedin.com/in/carlosalbertolembono)), adapted
-to run on the OpenAI API instead of Gemini.
-
 A trip planner built as 5 independent FastAPI microservices ("agents") that
 coordinate over plain JSON-over-HTTP, plus a React frontend. It uses the users' input:
 origin, destination, dates, theme, budget tier, and a total budget to
