@@ -1,0 +1,20 @@
+{
+  "name": "SmartItin AI Host Agent",
+  "description": "Orchestrates the Flight, Research, Accommodation & Food, and Itinerary agents to produce a full travel plan.",
+  "url": "http://localhost:8000",
+  "version": "2.0.0",
+  "capabilities": {
+    "streaming": false,
+    "pushNotifications": false
+  },
+  "defaultInputModes": ["application/json"],
+  "defaultOutputModes": ["application/json"],
+  "skills": [
+    {
+      "id": "plan_trip",
+      "name": "Plan Trip",
+      "description": "Given origin, destination, dates, theme, budget tier, flight class, and hotel stars, returns a complete travel plan: flights, destination research, accommodation & dining picks, a day-by-day itinerary, and a cost summary.",
+      "endpoint": "/run"
+    }
+  ]
+}

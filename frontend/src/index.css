@@ -1,0 +1,94 @@
+@import "tailwindcss";
+
+@theme {
+  --font-display: "Fraunces", serif;
+  --font-body: "Inter", sans-serif;
+
+  --color-sand-50: #fdfaf5;
+  --color-sand-100: #faf3e7;
+  --color-sand-200: #f3e6cf;
+  --color-cream: #fffdf8;
+
+  --color-teal-500: #1f7a72;
+  --color-teal-600: #17615a;
+  --color-teal-700: #124b46;
+
+  --color-coral-400: #ff8a6b;
+  --color-coral-500: #f56c4e;
+  --color-coral-600: #db4f34;
+}
+
+body {
+  margin: 0;
+  font-family: var(--font-body);
+  background-color: var(--color-sand-50);
+  color: var(--color-teal-700);
+}
+
+h1,
+h2,
+h3,
+.font-display {
+  font-family: var(--font-display);
+}
+
+@keyframes fade-in {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-fade-in {
+  animation: fade-in 0.45s ease-out;
+}
+
+/* "Download PDF" on the results page uses the browser's native
+   print-to-PDF flow (window.print(), "Save as PDF" as the destination)
+   rather than a PDF-generation library, matching this app's
+   dependency-free approach throughout. Interactive chrome (buttons,
+   nav) is hidden via Tailwind's print:hidden utility directly in JSX,
+   not here — this file only holds print rules Tailwind utilities can't
+   express (page setup, link URLs, page-break control). */
+@media print {
+  @page {
+    margin: 1.5cm;
+  }
+
+  body {
+    background-color: white;
+    font-size: 10.5pt;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  section {
+    box-shadow: none !important;
+    border-color: #ddd !important;
+    break-inside: avoid;
+  }
+
+  h2 {
+    break-after: avoid;
+  }
+
+  /* Buttons (Add to Itinerary, Choose this option, etc.) aren't
+     actionable on paper. */
+  button {
+    display: none !important;
+  }
+
+  /* A link's destination is invisible once printed — show it so the URL
+     is still usable from a physical page. */
+  a[href]:not([href=""])::after {
+    content: ' (' attr(href) ')';
+    font-size: 0.75em;
+    font-weight: normal;
+    color: #666;
+    word-break: break-all;
+  }
+}
