@@ -42,6 +42,10 @@ class FlightRequest(BaseModel):
     start_date: str
     end_date: str
     flight_class: str
+    # Set when the user picked airports from the frontend dropdown; empty
+    # means free-text origin/destination, resolved to IATA by the LLM.
+    origin_iata: str = ""
+    destination_iata: str = ""
 
 
 # ─── Research Agent ──────────────────────────────────────────────────────────
@@ -111,6 +115,7 @@ class AccommodationRequest(BaseModel):
     budget_tier: str
     theme: str
     nights: int
+    halal_food: bool = False
 
 
 # ─── Itinerary Agent ─────────────────────────────────────────────────────────
@@ -140,6 +145,7 @@ class ItineraryRequest(BaseModel):
     activity_budget_idr: int
     research_context: ResearchResponse
     accommodation_context: StayFoodResponse
+    halal_food: bool = False
 
 
 # Modular modification pipeline: `action` names the kind of change
@@ -156,6 +162,7 @@ class ItineraryModifyRequest(BaseModel):
     nights: int
     research_context: ResearchResponse
     accommodation_context: StayFoodResponse
+    halal_food: bool = False
 
 
 class ItineraryAlternative(BaseModel):
@@ -186,6 +193,9 @@ class TripRequest(BaseModel):
     hotel_stars: int
     total_budget_idr: int
     travel_pace: str
+    origin_iata: str = ""
+    destination_iata: str = ""
+    halal_food: bool = False
 
 
 # Raw output of agents/host_agent/agent.py's budget_allocation_agent — a

@@ -27,17 +27,25 @@ FALLBACK_CONCURRENCY = 3
 async def handle_task(payload: dict) -> dict:
     request = AccommodationRequest.model_validate(payload)
 
-    cache_key = accommodation_cache_key(request.destination, request.budget_tier, request.hotel_stars)
+    cache_key = accommodation_cache_key(
+        request.destination, request.budget_tier, request.hotel_stars, request.halal_food
+    )
     cached = accommodation_cache.get(cache_key)
     if cached is not None:
         return cached
 
     dining_style = get_tier_defaults(request.budget_tier)["dining_style"]
+    # Prefixed onto the tier's dining_style rather than replacing it, so a
+    # halal trip still gets street food vs. fine dining by tier — and the
+    # search_places restaurant query below picks it up automatically.
+    if request.halal_food:
+        dining_style = f"halal {dining_style}"
 
     gather_request = {
         "destination": request.destination,
         "hotel_stars": request.hotel_stars,
         "dining_style": dining_style,
+        "halal_food": request.halal_food,
         "theme": request.theme,
         "nights": request.nights,
     }
@@ -68,7 +76,8 @@ async def handle_task(payload: dict) -> dict:
 
     format_prompt = (
         f"Requested hotel_stars: {request.hotel_stars}\n"
-        f"Requested dining_style: {dining_style}\n\n"
+        f"Requested dining_style: {dining_style}\n"
+        f"Halal food required: {'yes' if request.halal_food else 'no'}\n\n"
         f"Stay & restaurant research findings:\n{findings}"
     )
     formatted = await run_agent_once(stay_food_formatter_agent, APP_NAME, format_prompt)

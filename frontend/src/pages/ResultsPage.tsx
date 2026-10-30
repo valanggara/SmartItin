@@ -150,6 +150,7 @@ export function ResultsPage() {
           <p className="mt-1 text-sm text-teal-700/70">
             {formatShortDate(status.request.start_date)} – {formatShortDate(status.request.end_date)} ·{' '}
             {status.request.theme} · {status.request.budget_tier} tier · {status.request.travel_pace} pace
+            {status.request.halal_food && ' · halal food'}
           </p>
           <p className="mt-1 text-xs text-teal-700/50">Generated {formatShortDate(new Date().toISOString())}</p>
         </div>

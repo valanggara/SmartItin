@@ -78,6 +78,10 @@ def research_cache_key(destination: str, theme: str) -> str:
     return f"{destination.strip().lower()}::{theme.strip().lower()}"
 
 
-def accommodation_cache_key(destination: str, budget_tier: str, hotel_stars: list[int]) -> str:
+def accommodation_cache_key(
+    destination: str, budget_tier: str, hotel_stars: list[int], halal_food: bool = False
+) -> str:
     stars_key = ",".join(str(s) for s in sorted(hotel_stars))
-    return f"{destination.strip().lower()}::{budget_tier.strip().lower()}::{stars_key}"
+    key = f"{destination.strip().lower()}::{budget_tier.strip().lower()}::{stars_key}"
+    # Suffix only when set, so existing non-halal cache entries stay valid.
+    return f"{key}::halal" if halal_food else key

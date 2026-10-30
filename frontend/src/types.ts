@@ -144,6 +144,8 @@ export type TravelPace = 'relaxed' | 'packed'
 export interface TripRequest {
   origin: string
   destination: string
+  origin_iata: string
+  destination_iata: string
   start_date: string
   end_date: string
   theme: string
@@ -152,6 +154,7 @@ export interface TripRequest {
   hotel_stars: HotelStars
   total_budget_idr: number
   travel_pace: TravelPace
+  halal_food: boolean
 }
 
 export interface JobSections {

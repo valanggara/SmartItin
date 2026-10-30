@@ -1,6 +1,7 @@
 import { useState, type FormEvent } from 'react'
 import { useNavigate } from 'react-router-dom'
 import { startTrip } from '../api'
+import { AirportSelect, type Airport } from '../components/AirportSelect'
 import { BrandLogo } from '../components/BrandLogo'
 import { BudgetTierCard } from '../components/BudgetTierCard'
 import { DatePicker } from '../components/DatePicker'
@@ -25,8 +26,8 @@ export function TripInputPage() {
   usePageTitle('SmartItin - Home')
   const navigate = useNavigate()
 
-  const [origin, setOrigin] = useState('')
-  const [destination, setDestination] = useState('')
+  const [origin, setOrigin] = useState<Airport | null>(null)
+  const [destination, setDestination] = useState<Airport | null>(null)
   const [startDate, setStartDate] = useState('')
   const [endDate, setEndDate] = useState('')
   const [theme, setTheme] = useState(THEME_OPTIONS[0])
@@ -35,6 +36,7 @@ export function TripInputPage() {
   const [budgetTier, setBudgetTier] = useState<BudgetTier>('standard')
   const [flightClass, setFlightClass] = useState<FlightClass>(TIER_DEFAULTS.standard.flightClass)
   const [hotelStars, setHotelStars] = useState<HotelStars>(TIER_DEFAULTS.standard.hotelStars)
+  const [halalFood, setHalalFood] = useState(false)
   const [submitting, setSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
 
@@ -52,6 +54,10 @@ export function TripInputPage() {
       setError('Please fill in origin, destination, and both dates.')
       return
     }
+    if (origin.iata === destination.iata) {
+      setError('Origin and destination must be different airports.')
+      return
+    }
     if (endDate < startDate) {
       setError('End date must be after the start date.')
       return
@@ -61,9 +67,14 @@ export function TripInputPage() {
       return
     }
 
+    // origin/destination stay plain "City, Country" text — research and
+    // accommodation agents search by place name — while the IATA codes go
+    // to the flight agent so it doesn't have to guess the airport.
     const payload: TripRequest = {
-      origin,
-      destination,
+      origin: `${origin.city}, ${origin.country}`,
+      destination: `${destination.city}, ${destination.country}`,
+      origin_iata: origin.iata,
+      destination_iata: destination.iata,
       start_date: startDate,
       end_date: endDate,
       theme,
@@ -72,6 +83,7 @@ export function TripInputPage() {
       hotel_stars: hotelStars,
       total_budget_idr: totalBudgetIdr,
       travel_pace: travelPace,
+      halal_food: halalFood,
     }
 
     setSubmitting(true)
@@ -94,30 +106,28 @@ export function TripInputPage() {
 
       <form onSubmit={handleSubmit} className="space-y-8">
         <div className="grid gap-4 sm:grid-cols-2">
-          <label className="block">
+          {/* div, not label: a label would forward clicks on the dropdown's
+              options back to the input and reopen the list */}
+          <div>
             <span className="mb-1 block text-sm font-medium text-teal-700">Origin</span>
-            <div className="relative">
-              <MapPinIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-teal-700/50" />
-              <input
-                value={origin}
-                onChange={(e) => setOrigin(e.target.value)}
-                placeholder="e.g. Jakarta"
-                className="w-full rounded-lg border border-sand-200 bg-cream py-2 pl-9 pr-3 text-teal-700 outline-none placeholder:text-teal-700/40 focus:border-teal-500"
-              />
-            </div>
-          </label>
-          <label className="block">
+            <AirportSelect
+              value={origin}
+              onChange={setOrigin}
+              ariaLabel="Origin"
+              placeholder="Search city, country, or airport code"
+              icon={<MapPinIcon className="h-4 w-4" />}
+            />
+          </div>
+          <div>
             <span className="mb-1 block text-sm font-medium text-teal-700">Destination</span>
-            <div className="relative">
-              <FlagIcon className="pointer-events-none absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-teal-700/50" />
-              <input
-                value={destination}
-                onChange={(e) => setDestination(e.target.value)}
-                placeholder="e.g. Bali"
-                className="w-full rounded-lg border border-sand-200 bg-cream py-2 pl-9 pr-3 text-teal-700 outline-none placeholder:text-teal-700/40 focus:border-teal-500"
-              />
-            </div>
-          </label>
+            <AirportSelect
+              value={destination}
+              onChange={setDestination}
+              ariaLabel="Destination"
+              placeholder="Search city, country, or airport code"
+              icon={<FlagIcon className="h-4 w-4" />}
+            />
+          </div>
           <label className="block">
             <span className="mb-1 block text-sm font-medium text-teal-700">Departure date</span>
             <DatePicker
@@ -236,6 +246,26 @@ export function TripInputPage() {
             </SelectField>
           </label>
         </div>
+
+        <label
+          className={`flex cursor-pointer items-start gap-3 rounded-2xl border-2 p-4 transition ${
+            halalFood ? 'border-teal-500 bg-teal-500/5' : 'border-sand-200 bg-cream hover:border-teal-500/50'
+          }`}
+        >
+          <input
+            type="checkbox"
+            checked={halalFood}
+            onChange={(e) => setHalalFood(e.target.checked)}
+            className="mt-1 h-4 w-4 shrink-0 accent-teal-500"
+          />
+          <span>
+            <span className="block text-sm font-medium text-teal-700">Halal food only</span>
+            <span className="mt-0.5 block text-sm text-teal-700/70">
+              Restaurants and every meal in the itinerary will be halal-certified or Muslim-friendly, with no
+              alcohol-focused venues.
+            </span>
+          </span>
+        </label>
 
         {error && <p className="text-sm text-coral-600">{error}</p>}
 

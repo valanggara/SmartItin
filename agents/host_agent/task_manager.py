@@ -308,6 +308,7 @@ async def handle_modify_itinerary(job_id: str, action: str, action_params: dict)
         "nights": nights,
         "research_context": research_result,
         "accommodation_context": accommodation_result,
+        "halal_food": request.halal_food,
     }
 
     result = await _safe_call(ITINERARY_AGENT_URL, modify_payload, "itinerary_modify")

@@ -339,7 +339,7 @@ export function TripPlanPdf({ request, flights, research, accommodation, itinera
         </Text>
         <Text style={styles.coverMeta}>
           {request.theme.replace(/\b\w/g, (c) => c.toUpperCase())} · {request.budget_tier} tier ·{' '}
-          {request.travel_pace} pace
+          {request.travel_pace} pace{request.halal_food ? ' · halal food' : ''}
         </Text>
 
         {flights && <FlightsSection data={flights} />}
