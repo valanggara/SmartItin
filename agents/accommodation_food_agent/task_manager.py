@@ -118,11 +118,19 @@ async def handle_task(payload: dict) -> dict:
                     item["maps_link"] = place["maps_link"]
                 if not item["image_url"] and place.get("image_url"):
                     item["image_url"] = place["image_url"]
+                if "rating" in item and not 0 < item["rating"] <= 5 and place.get("rating"):
+                    item["rating"] = place["rating"]
         logger.info(
             "fallback lookups=%d resolved=%d",
             len(unmatched),
             sum(1 for p in fallback_places if p),
         )
+
+    # Anything still above 5 had no Google match to replace it — it's a
+    # 10-point booking-site score, so rescale it to the app's 5-point scale.
+    for stay in result["stays"]:
+        if stay["rating"] > 5:
+            stay["rating"] = round(stay["rating"] / 2, 1)
 
     logger.info(
         "stays matched=%d/%d names=%s",

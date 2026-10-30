@@ -118,7 +118,14 @@ def search_places(query: str) -> dict:
     if "error" in data:
         return {"error": data["error"]}
 
+    # A query naming one specific place ("Hotel Gracery Shinjuku") gets a
+    # single `place_results` object back instead of a `local_results` list
+    # — reading only local_results is what made narrow lookups look like
+    # zero-result responses (see find_place's docstring) even though
+    # SerpAPI had found the exact place, thumbnail included.
     results = data.get("local_results") or []
+    if not results and isinstance(data.get("place_results"), dict):
+        results = [data["place_results"]]
     if not results:
         return {"error": f"No places found for query: {query!r}"}
 
@@ -136,12 +143,20 @@ def search_places(query: str) -> dict:
             {
                 "name": name,
                 "address": r.get("address", ""),
-                "rating": r.get("rating", 0),
+                "rating": _to_float(r.get("rating")),
                 "image_url": r.get("thumbnail", ""),
                 "maps_link": maps_link,
             }
         )
     return {"places": places}
+
+
+def _to_float(value: object) -> float:
+    # local_results ratings are numbers, place_results ratings are strings
+    try:
+        return float(value)  # type: ignore[arg-type]
+    except (TypeError, ValueError):
+        return 0.0
 
 
 def _normalize_name(name: str) -> str:
@@ -177,6 +192,10 @@ def attach_place_matches(items: list[dict], places: list[dict]) -> None:
         match = match_place(item.get("name", ""), places)
         item["maps_link"] = match.get("maps_link", "") if match else ""
         item["image_url"] = match.get("image_url", "") if match else ""
+        # Google's real 5-point rating beats an LLM's 0 ("not found in
+        # snippets") or a 10-point Booking.com-style score copied verbatim
+        if match and "rating" in item and not 0 < item["rating"] <= 5 and match.get("rating"):
+            item["rating"] = match["rating"]
 
 
 def find_place(name: str, destination: str) -> dict | None:
@@ -267,25 +286,29 @@ def find_place(name: str, destination: str) -> dict | None:
             else f"https://www.google.com/maps/search/?api=1&query={quote(title)}"
         )
         image_url = _best_image(r)
+        rating = _to_float(r.get("rating"))
         if not image_url:
             maps_hit = _resolve_via_maps_engine(title)
             if maps_hit:
                 image_url = maps_hit.get("image_url", "")
+                rating = rating or maps_hit.get("rating", 0.0)
                 if not place_id and maps_hit.get("maps_link"):
                     maps_link = maps_hit["maps_link"]
-        return {"name": title, "maps_link": maps_link, "image_url": image_url}
+        return {"name": title, "maps_link": maps_link, "image_url": image_url, "rating": rating}
 
     kg = data.get("knowledge_graph")
     if isinstance(kg, dict) and kg.get("title"):
         title = kg["title"]
         maps_link = f"https://www.google.com/maps/search/?api=1&query={quote(title)}"
         image_url = _best_image(kg)
+        rating = _to_float(kg.get("rating"))
         if not image_url:
             maps_hit = _resolve_via_maps_engine(title)
             if maps_hit:
                 image_url = maps_hit.get("image_url", "")
+                rating = rating or maps_hit.get("rating", 0.0)
                 if maps_hit.get("maps_link"):
                     maps_link = maps_hit["maps_link"]
-        return {"name": title, "maps_link": maps_link, "image_url": image_url}
+        return {"name": title, "maps_link": maps_link, "image_url": image_url, "rating": rating}
 
     return None
